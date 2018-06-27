@@ -20,7 +20,7 @@ def getHtmlText(url):
         return "Error"
 
 def saveHtmlFile(html,date):
-    with open("/data/spider_study/bjzjw_html/"+date+".html", "wb") as f:
+    with open("/data/python_pro/Spider_py/BJZJW_html/"+date+".html", "wb") as f:
         f.write(html)
 
 def getSign(allInfo):
@@ -41,14 +41,39 @@ def getCheck(allInfo):
     AllCheck_Dict['CheckHouseArea'] = float(AllCheck('td')[3].string)
     return AllCheck_Dict
 
-def saveMysql(yesterday_str,AllCheck_Dict,AllSign_Dict):
+def getMonthdata(allInfo):
+    AllMonthdata = allInfo[1]
+    AllMonthdata_Dict = {}
+    AllMonthdata_Dict['SignNum'] = int(AllMonthdata('td')[0].string)
+    AllMonthdata_Dict['SignArea'] = float(AllMonthdata('td')[1].string)
+    AllMonthdata_Dict['SignHouseNum'] = int(AllMonthdata('td')[2].string)
+    AllMonthdata_Dict['SignHouseArea'] = float(AllMonthdata('td')[3].string)
+    return AllMonthdata_Dict
+
+def saveDailyMysql(yesterday_str,AllCheck_Dict,AllSign_Dict):
 #def saveMysql(date):
-    db = pymysql.connect("localhost", "root", "hoolai", "HouseData")
+    db = pymysql.connect("localhost", "root", "hoolai", "HData")
     cursor = db.cursor()
-    sql = "INSERT INTO check_sign(Date,CheckNum,CheckArea,CheckHouseNum,CheckHouseArea,SignNum,SignArea,SignHouseNum,SignHouseArea)\
+    sql = "INSERT INTO BJZJW_DAILY_DATA(Date,CheckNum,CheckArea,CheckHouseNum,CheckHouseArea,SignNum,SignArea,SignHouseNum,SignHouseArea)\
            VALUES('%s',%d,%.2f,%d,%.2f,%d,%.2f,%d,%.2f)" %(yesterday_str,AllCheck_Dict['CheckNum'],AllCheck_Dict['CheckArea'],\
            AllCheck_Dict['CheckHouseNum'],AllCheck_Dict['CheckHouseArea'],AllSign_Dict['SignNum'],\
            AllSign_Dict['SignArea'],AllSign_Dict['SignHouseNum'],AllSign_Dict['SignHouseArea'])
+    #sql = "INSERT INTO check_sign(Date)VALUES('%s')"%(date)
+    # print(sql)
+    try:
+       cursor.execute(sql)
+       db.commit()
+    except:
+       db.rollback()
+    db.close()
+
+def saveMonthMysql(lastmonth, AllMonthdata_Dict):
+#def saveMysql(date):
+    db = pymysql.connect("localhost", "root", "hoolai", "HData")
+    cursor = db.cursor()
+    sql = "INSERT INTO BJZJW_MONTH_DATA(Month,SignNum,SignArea,SignHouseNum,SignHouseArea)\
+           VALUES('%s',%d,%.2f,%d,%.2f)" % (lastmonth, AllMonthdata_Dict['SignNum'],\
+           AllMonthdata_Dict['SignArea'], AllMonthdata_Dict['SignHouseNum'], AllMonthdata_Dict['SignHouseArea'])
     #sql = "INSERT INTO check_sign(Date)VALUES('%s')"%(date)
     # print(sql)
     try:
@@ -67,8 +92,10 @@ if __name__ == "__main__":
     oneday = datetime.timedelta(days=1)
     yesterday = today - oneday
     yesterday_str = yesterday.strftime('%Y-%m-%d')
+    lastmonth = yesterday.strftime('%Y-%m')
     html_name = today_str+".html"
-    html_file = '/data/spider_study/bjzjw_html/'+html_name
+    html_file = '/data/python_pro/Spider_py/BJZJW_html/'+html_name
+    # print(lastmonth)
 
     if os.path.exists(html_file):
         pass
@@ -77,11 +104,13 @@ if __name__ == "__main__":
 
     with open(html_file) as html:
         soup = BeautifulSoup(html, 'lxml')
-        allInfo = soup.find_all('table', attrs={'class':'tjInfo'})
+        allInfo = soup.find_all('table', attrs={'class': 'tjInfo'})
 
-    #print(getCheck(allInfo))
-    #print(getSign(allInfo))
+    if int(today.strftime('%d')) == 1:
+        AllMonthdata_Dict = getMonthdata(allInfo)
+        saveMonthMysql(str(lastmonth), AllMonthdata_Dict)
+
     AllCheck_Dict = getCheck(allInfo)
     AllSign_Dict = getSign(allInfo)
-    saveMysql(yesterday_str, AllCheck_Dict, AllSign_Dict)
-    print('get data success!')
+    saveDailyMysql(yesterday_str, AllCheck_Dict, AllSign_Dict)
+    print('%s BJZJW_data get success!' %(yesterday_str))
