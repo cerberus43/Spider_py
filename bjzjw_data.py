@@ -93,8 +93,8 @@ if __name__ == "__main__":
     yesterday = today - oneday
     yesterday_str = yesterday.strftime('%Y-%m-%d')
     lastmonth = yesterday.strftime('%Y-%m')
-    html_name = today_str+".html"
-    html_file = '/data/python_pro/Spider_py/BJZJW_html/'+html_name
+    #html_name = today_str+".html"
+    #html_file = '/data/python_pro/Spider_py/BJZJW_html/'+html_name
     # print(lastmonth)
 
     if os.path.exists(html_file):
@@ -108,9 +108,9 @@ if __name__ == "__main__":
 
     if int(today.strftime('%d')) == 1:
         AllMonthdata_Dict = getMonthdata(allInfo)
-        saveMonthMysql(str(lastmonth), AllMonthdata_Dict)
+        #saveMonthMysql(str(lastmonth), AllMonthdata_Dict)
 
     AllCheck_Dict = getCheck(allInfo)
     AllSign_Dict = getSign(allInfo)
-    saveDailyMysql(yesterday_str, AllCheck_Dict, AllSign_Dict)
-    print('%s BJZJW_data get success!' %(yesterday_str))
+    #saveDailyMysql(yesterday_str, AllCheck_Dict, AllSign_Dict)
+    #print('%s BJZJW_data get success!' %(yesterday_str))
